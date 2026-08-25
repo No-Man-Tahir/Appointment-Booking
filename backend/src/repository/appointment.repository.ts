@@ -61,7 +61,7 @@ export async function findAppointmentsByUser(
 
       WHERE a.user_id = $1
 
-      ORDER BY a.scheduled_at
+      ORDER BY a.scheduled_at ASC
     `,
     [userId]
   );

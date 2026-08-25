@@ -35,6 +35,10 @@ CREATE TABLE appointments (
         REFERENCES users(id)
         ON DELETE CASCADE,
 
+    provider_id UUID NOT NULL
+        REFERENCES providers(id)
+        ON DELETE RESTRICT,
+
     scheduled_at TIMESTAMPTZ NOT NULL,
 
     status VARCHAR(20) NOT NULL DEFAULT 'confirmed',
@@ -59,6 +63,9 @@ CREATE TABLE appointments (
 
 CREATE INDEX idx_appointments_user_scheduled_at
 ON appointments (user_id, scheduled_at);
+
+CREATE INDEX idx_appointments_provider_scheduled_at
+ON appointments (provider_id, scheduled_at);
 
 
 -- =========================================================
@@ -122,3 +129,15 @@ CREATE TABLE chat_messages (
 
 CREATE INDEX idx_chat_messages_session_created_at
 ON chat_messages (chat_session_id, created_at);
+
+CREATE TABLE providers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    name VARCHAR(120) NOT NULL,
+
+    specialty VARCHAR(120),
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

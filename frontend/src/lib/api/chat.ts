@@ -1,6 +1,7 @@
 import type {
   ChatMessage,
   ChatSession,
+  SendChatMessageResponse,
 } from "@/types/chat";
 
 import {
@@ -50,9 +51,7 @@ export function sendChatMessage(
   sessionId: string,
   content: string
 ) {
-  return apiFetch<{
-    message: ChatMessage;
-  }>(
+  return apiFetch<SendChatMessageResponse>(
     `/api/chat/sessions/${sessionId}/messages`,
     {
       method: "POST",

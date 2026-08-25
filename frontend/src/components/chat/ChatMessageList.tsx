@@ -42,24 +42,22 @@ export function ChatMessageList({
   }
 
   if (messages.length === 0) {
-    return (
-      <div className="flex flex-1 items-center justify-center px-6 text-center">
-        <div>
-          <h2 className="font-medium">
-            Start a conversation
-          </h2>
+  return (
+    <div className="flex flex-1 items-center justify-center px-6 text-center">
+      <div>
+        <h2 className="font-medium">
+          Start a conversation
+        </h2>
 
-          <p className="mt-2 text-sm text-gray-500">
-            Tell us what kind of appointment you would like to book.
-          </p>
-
-          <p className="mt-2 text-xs text-gray-400">
-            AI assistance will be connected in the next step.
-          </p>
-        </div>
+        <p className="mt-2 text-sm text-gray-500">
+          Tell me who you would
+          like to book with and
+          when.
+        </p>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <div className="flex-1 space-y-4 overflow-y-auto p-5">

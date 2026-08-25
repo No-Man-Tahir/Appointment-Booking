@@ -30,23 +30,28 @@ import {
   ChatSessionList,
 } from "./ChatSessionList";
 
+
 export function ChatInterface() {
   const [
     sessions,
     setSessions,
-  ] = useState<ChatSession[]>([]);
+  ] = useState<
+    ChatSession[]
+  >([]);
 
   const [
     selectedSessionId,
     setSelectedSessionId,
-  ] = useState<string | null>(
-    null
-  );
+  ] = useState<
+    string | null
+  >(null);
 
   const [
     messages,
     setMessages,
-  ] = useState<ChatMessage[]>([]);
+  ] = useState<
+    ChatMessage[]
+  >([]);
 
   const [
     loadingSessions,
@@ -59,42 +64,57 @@ export function ChatInterface() {
   ] = useState(false);
 
   const [
+    sendingMessage,
+    setSendingMessage,
+  ] = useState(false);
+
+  const [
     error,
     setError,
   ] = useState("");
 
+
   const loadSessions =
-    useCallback(async () => {
-      setError("");
+    useCallback(
+      async () => {
+        setError("");
 
-      try {
-        const response =
-          await getChatSessions();
+        try {
+          const response =
+            await getChatSessions();
 
-        setSessions(
-          response.sessions
-        );
+          setSessions(
+            response.sessions
+          );
 
-        return response.sessions;
-      } catch (error) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Failed to load conversations"
-        );
+          return response.sessions;
+        } catch (error) {
+          setError(
+            error instanceof Error
+              ? error.message
+              : "Failed to load conversations"
+          );
 
-        return [];
-      } finally {
-        setLoadingSessions(false);
-      }
-    }, []);
+          return [];
+        } finally {
+          setLoadingSessions(
+            false
+          );
+        }
+      },
+      []
+    );
+
 
   const loadMessages =
     useCallback(
       async (
         sessionId: string
       ) => {
-        setLoadingMessages(true);
+        setLoadingMessages(
+          true
+        );
+
         setError("");
 
         try {
@@ -123,13 +143,15 @@ export function ChatInterface() {
       []
     );
 
+
   useEffect(() => {
     async function initialize() {
       const existingSessions =
         await loadSessions();
 
       if (
-        existingSessions.length > 0
+        existingSessions.length >
+        0
       ) {
         const mostRecent =
           existingSessions[0];
@@ -149,6 +171,7 @@ export function ChatInterface() {
     loadSessions,
     loadMessages,
   ]);
+
 
   async function handleNewChat() {
     setError("");
@@ -178,6 +201,7 @@ export function ChatInterface() {
     }
   }
 
+
   async function handleSelectSession(
     sessionId: string
   ) {
@@ -197,10 +221,12 @@ export function ChatInterface() {
     );
   }
 
+
   async function handleSendMessage(
     content: string
   ) {
     setError("");
+    setSendingMessage(true);
 
     let sessionId =
       selectedSessionId;
@@ -211,7 +237,8 @@ export function ChatInterface() {
           await createChatSession();
 
         sessionId =
-          sessionResponse.session.id;
+          sessionResponse
+            .session.id;
 
         setSelectedSessionId(
           sessionId
@@ -234,38 +261,45 @@ export function ChatInterface() {
       setMessages(
         (current) => [
           ...current,
-          response.message,
+
+          response.userMessage,
+
+          response.assistantMessage,
         ]
       );
 
-      const updatedSessions =
-        await loadSessions();
-
-      setSessions(
-        updatedSessions
-      );
+      await loadSessions();
     } catch (error) {
       setError(
         error instanceof Error
           ? error.message
           : "Failed to send message"
       );
+    } finally {
+      setSendingMessage(false);
     }
   }
+
 
   return (
     <div className="flex h-[calc(100vh-73px)] overflow-hidden border-t">
       <ChatSessionList
-        sessions={sessions}
+        sessions={
+          sessions
+        }
+
         selectedSessionId={
           selectedSessionId
         }
+
         loading={
           loadingSessions
         }
+
         onSelect={
           handleSelectSession
         }
+
         onNewChat={
           handleNewChat
         }
@@ -278,8 +312,9 @@ export function ChatInterface() {
           </h1>
 
           <p className="text-xs text-gray-500">
-            Chat persistence is active.
-            AI assistance will be connected next.
+            Tell me who and when
+            you&apos;d like to
+            book.
           </p>
         </div>
 
@@ -290,16 +325,28 @@ export function ChatInterface() {
         )}
 
         <ChatMessageList
-          messages={messages}
+          messages={
+            messages
+          }
+
           loading={
             loadingMessages
           }
         />
 
+        {sendingMessage && (
+          <div className="px-5 pb-2 text-sm text-gray-400">
+            Assistant is
+            thinking...
+          </div>
+        )}
+
         <ChatInput
           disabled={
-            loadingMessages
+            loadingMessages ||
+            sendingMessage
           }
+
           onSend={
             handleSendMessage
           }

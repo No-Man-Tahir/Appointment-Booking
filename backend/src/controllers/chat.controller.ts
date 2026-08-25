@@ -11,6 +11,7 @@ import {
   startChatSession,
 } from "../services/chat.service.js";
 
+
 export async function createSession(
   req: Request,
   res: Response
@@ -25,6 +26,7 @@ export async function createSession(
   });
 }
 
+
 export async function listSessions(
   req: Request,
   res: Response
@@ -38,6 +40,7 @@ export async function listSessions(
     sessions,
   });
 }
+
 
 export async function getSession(
   req: Request<{ id: string }>,
@@ -54,6 +57,7 @@ export async function getSession(
   });
 }
 
+
 export async function listMessages(
   req: Request<{ id: string }>,
   res: Response
@@ -69,18 +73,23 @@ export async function listMessages(
   });
 }
 
+
 export async function createMessage(
   req: Request<{ id: string }>,
   res: Response
 ) {
-  const message =
+  const result =
     await sendChatMessage({
       userId: req.user!.id,
-      sessionId: req.params.id,
-      content: req.body.content,
+
+      sessionId:
+        req.params.id,
+
+      content:
+        req.body.content,
     });
 
-  res.status(201).json({
-    message,
-  });
+  res.status(201).json(
+    result
+  );
 }

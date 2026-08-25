@@ -6,13 +6,27 @@ import {
   findMessagesBySession,
 } from "../repository/chat.repository";
 
-import { AppError } from "../utils/AppError.js";
+import {
+  findProviders,
+} from "../repository/provider.repository";
+
+import {
+  generateAIResponse,
+} from "./ai.service.js";
+
+import {
+  AppError,
+} from "../utils/AppError.js";
+
 
 export async function startChatSession(
   userId: string
 ) {
-  return createChatSession(userId);
+  return createChatSession(
+    userId
+  );
 }
+
 
 export async function getUserChatSessions(
   userId: string
@@ -21,6 +35,7 @@ export async function getUserChatSessions(
     userId
   );
 }
+
 
 export async function getUserChatSession(
   userId: string,
@@ -42,6 +57,7 @@ export async function getUserChatSession(
 
   return session;
 }
+
 
 export async function getChatMessages(
   userId: string,
@@ -66,6 +82,7 @@ export async function getChatMessages(
   );
 }
 
+
 export async function sendChatMessage(
   input: {
     userId: string;
@@ -87,7 +104,9 @@ export async function sendChatMessage(
     );
   }
 
-  if (session.status !== "active") {
+  if (
+    session.status !== "active"
+  ) {
     throw new AppError(
       409,
       "Chat session is closed",
@@ -95,9 +114,87 @@ export async function sendChatMessage(
     );
   }
 
-  return createChatMessage({
-    sessionId: session.id,
-    role: "user",
-    content: input.content,
-  });
+  const userMessage =
+    await createChatMessage({
+      sessionId:
+        session.id,
+
+      role: "user",
+
+      content:
+        input.content,
+    });
+
+
+  const conversationHistory =
+    await findMessagesBySession(
+      session.id
+    );
+
+
+  const providers =
+    await findProviders();
+
+
+  const aiResponse =
+    await generateAIResponse({
+      messages:
+        conversationHistory,
+
+      providers,
+    });
+
+
+  let providerId =
+    aiResponse.booking.providerId;
+
+
+  if (providerId) {
+    const providerExists =
+      providers.some(
+        (provider) =>
+          provider.id ===
+          providerId
+      );
+
+    if (!providerExists) {
+      providerId = null;
+
+      if (
+        !aiResponse.booking
+          .missingFields.includes(
+            "provider"
+          )
+      ) {
+        aiResponse.booking
+          .missingFields.push(
+            "provider"
+          );
+      }
+    }
+  }
+
+
+  const assistantMessage =
+    await createChatMessage({
+      sessionId:
+        session.id,
+
+      role: "assistant",
+
+      content:
+        aiResponse.assistantMessage,
+    });
+
+
+  return {
+    userMessage,
+
+    assistantMessage,
+
+    booking: {
+      ...aiResponse.booking,
+      providerId,
+    },
+  };
 }

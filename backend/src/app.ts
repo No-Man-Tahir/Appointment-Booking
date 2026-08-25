@@ -11,6 +11,7 @@ import { env } from "./config/env.js";
 import { authRouter } from "./routes/auth.routes.js";
 import cookieParser from "cookie-parser";
 import { appointmentRouter } from "./routes/appointment.routes.js";
+import { chatRouter } from "./routes/chat.routes.js";
 
 export const app = express();
 
@@ -47,6 +48,11 @@ apiRouter.use(
 apiRouter.use(
   "/appointments",
   appointmentRouter
+);
+
+apiRouter.use(
+    "/chat",
+    chatRouter
 );
 
 

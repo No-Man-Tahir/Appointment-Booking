@@ -1,36 +1,204 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Appointment Booking
 
-## Getting Started
+A full-stack appointment booking prototype with a Next.js frontend, Express backend, PostgreSQL database, and planned AI-assisted booking flow.
 
-First, run the development server:
+## Tech Stack
+
+- Next.js + TypeScript
+- Node.js + Express
+- PostgreSQL
+- `pg`
+- Zod
+- Docker
+
+## Project Structure
+
+```text
+frontend/
+backend/
+  src/
+    config/
+    controllers/
+    db/
+    middleware/
+    repositories/
+    routes/
+    services/
+    utils/
+```
+
+The backend follows a simple layered structure:
+
+```text
+Route
+  ↓
+Controller
+  ↓
+Service
+  ↓
+Repository
+  ↓
+PostgreSQL
+```
+
+Routes handle HTTP routing, controllers handle request/response concerns, services contain business logic, and repositories will handle database access.
+
+## Database
+
+Current entities:
+
+- `users`
+- `providers`
+- `appointments`
+- `chat_sessions`
+- `chat_messages`
+
+A user can book an appointment with a provider.
+
+Relevant indexes are added for:
+
+- user appointments by scheduled time
+- provider appointments by scheduled time
+- user chat sessions
+- chat messages by session
+
+PostgreSQL migrations are versioned and executed transactionally.
+
+## Backend Middleware
+
+The backend currently includes:
+
+- request logging
+- request validation foundation
+- basic rate limiting
+- CORS
+- Helmet
+- centralized error handling
+- not-found handling
+
+The current rate limiter is in-memory because this prototype runs as a single backend instance. In a distributed setup, a shared store such as Redis would be more appropriate.
+
+## Local Setup
+
+### 1. Install dependencies
+
+Frontend:
+
+```bash
+cd frontend
+npm install
+```
+
+Backend:
+
+```bash
+cd backend
+npm install
+```
+
+### 2. Configure environment variables
+
+Create `backend/.env` from `backend/.env.example`.
+
+Example:
+
+```env
+NODE_ENV=development
+PORT=4000
+DATABASE_URL=postgresql://appointment_user:appointment_password@localhost:5432/appointment_app
+CLIENT_ORIGIN=http://localhost:3000
+```
+
+Create `frontend/.env.local` from `frontend/.env.example`.
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:4000
+```
+
+### 3. Start PostgreSQL
+
+From the project root:
+
+```bash
+docker compose up -d postgres
+```
+
+### 4. Run migrations
+
+```bash
+cd backend
+npm run db:migrate
+```
+
+### 5. Start backend
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Backend:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:4000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Health check:
 
-## Learn More
+```text
+GET /api/health
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 6. Start frontend
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+cd frontend
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Frontend:
 
-## Deploy on Vercel
+```text
+http://localhost:3000
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Current Progress
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Implemented:
+
+- frontend/backend project setup
+- PostgreSQL schema
+- migrations
+- connection pooling
+- backend architecture
+- request logging
+- validation foundation
+- rate limiting
+- centralized error handling
+- health endpoint
+
+Next:
+
+- JWT authentication
+- provider and appointment APIs
+- chat flow
+- AI-assisted appointment booking
+
+## Key Decisions
+
+- PostgreSQL is used because the domain is relational and benefits from constraints and foreign keys.
+- `pg` is used directly to keep database behavior explicit and easy to review.
+- UUIDs are used for public-facing entity IDs.
+- `TIMESTAMPTZ` is used for appointment times to avoid timezone ambiguity.
+- AI will interpret user requests, but business logic and database writes will remain in the application service layer.
+
+## Known Limitations
+
+This is a functional prototype, not a production-scale system.
+
+Current limitations include:
+
+- no authentication yet
+- no provider availability model yet
+- no distributed rate limiting
+- no multi-tenancy
+- no AI integration yet

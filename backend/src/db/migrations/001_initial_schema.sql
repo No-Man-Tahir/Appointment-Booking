@@ -24,6 +24,18 @@ CREATE UNIQUE INDEX uq_users_email_lower
 ON users (LOWER(email));
 
 
+CREATE TABLE providers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    name VARCHAR(120) NOT NULL,
+
+    specialty VARCHAR(120),
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- =========================================================
 -- Appointments
 -- =========================================================
@@ -129,15 +141,3 @@ CREATE TABLE chat_messages (
 
 CREATE INDEX idx_chat_messages_session_created_at
 ON chat_messages (chat_session_id, created_at);
-
-CREATE TABLE providers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
-    name VARCHAR(120) NOT NULL,
-
-    specialty VARCHAR(120),
-
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);

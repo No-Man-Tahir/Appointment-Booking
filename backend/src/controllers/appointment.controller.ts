@@ -19,7 +19,6 @@ export async function create(
     providerId: req.body.providerId,
     scheduledAt: req.body.scheduledAt,
     notes: req.body.notes,
-    duration: req.body.duration,
   });
 
   res.status(201).json({

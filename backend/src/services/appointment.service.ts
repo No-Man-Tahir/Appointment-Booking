@@ -6,18 +6,21 @@ import {
 } from "../repository/appointment.repository";
 import { findProviderById } from "../repository/provider.repository";
 import { AppError } from "../utils/AppError.js";
+import { env } from "../config/env.js";
 
 type PostgresError = {
   code?: string;
   constraint?: string;
 };
 
+const durationMinutes =
+  env.APPOINTMENT_DURATION_MINUTES;
+
 export async function bookAppointment(input: {
   userId: string;
   providerId: string;
   scheduledAt: string;
   notes?: string;
-  duration: number;
 }) {
   const scheduledAt = new Date(
     input.scheduledAt
@@ -48,7 +51,7 @@ export async function bookAppointment(input: {
   const end =
     new Date(
       start.getTime() +
-        input.duration * 60_000
+        durationMinutes * 60_000
     );
 
   
@@ -63,8 +66,6 @@ export async function bookAppointment(input: {
       end.toISOString(),
   });
   } catch (error) {
-    const dbError = error as PostgresError;
-
     if (
   error &&
   typeof error === "object" &&

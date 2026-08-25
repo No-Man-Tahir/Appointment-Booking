@@ -381,10 +381,6 @@ export function AppointmentForm() {
         notes:
           notes.trim() ||
           undefined,
-        duration:
-          Number(
-            process.env.APPOINTMENT_DURATION||"30"
-          )
       });
 
 

@@ -21,11 +21,13 @@ export function AppointmentCard({
     new Date(
       appointment.scheduled_at
     );
+    const endDate = new Date(
+        appointment.ends_at
+    );
 
   const canCancel =
     appointment.status === "pending" ||
     appointment.status === "confirmed";
-const endDate = new Date(appointmentDate.getTime() + appointment.duration * 60 * 1000);
   
 return (
     <article className="rounded-lg border bg-white p-5">

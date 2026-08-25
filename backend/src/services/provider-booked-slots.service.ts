@@ -13,9 +13,10 @@ import {
 import {
   AppError,
 } from "../utils/AppError.js";
+import { env } from "../config/env.js";
 
-
-const SLOT_DURATION_MINUTES = 30;
+const durationMinutes =
+  env.APPOINTMENT_DURATION_MINUTES;
 
 
 function normalizeTimezone(
@@ -110,7 +111,7 @@ export async function getProviderBookedSlots(
     const slotEnd =
       slotStart.plus({
         minutes:
-          SLOT_DURATION_MINUTES,
+          durationMinutes,
       });
 
     const slotStartMs =
@@ -133,7 +134,7 @@ export async function getProviderBookedSlots(
 
           const existingEnd =
             existingStart +
-            appointment.duration_minutes *
+            appointment.duration *
               60_000;
 
           return (
@@ -156,7 +157,7 @@ export async function getProviderBookedSlots(
     slotStart =
       slotStart.plus({
         minutes:
-          SLOT_DURATION_MINUTES,
+          durationMinutes,
       });
   }
 
@@ -168,7 +169,7 @@ export async function getProviderBookedSlots(
       input.date,
 
     durationMinutes:
-      SLOT_DURATION_MINUTES,
+      durationMinutes,
 
     bookedSlots,
   };

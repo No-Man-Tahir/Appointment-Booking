@@ -16,7 +16,6 @@ export function createAppointment(input: {
   providerId: string;
   scheduledAt: string;
   notes?: string;
-  duration: number;
 }) {
   return apiFetch<{
     appointment: Appointment;

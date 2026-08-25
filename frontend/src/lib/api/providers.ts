@@ -34,7 +34,6 @@ export function getProviderBookedSlots(
   return apiFetch<{
     providerId: string;
     date: string;
-    durationMinutes: number;
     bookedSlots: string[];
   }>(
     `/api/providers/${providerId}/booked-slots?${params.toString()}`

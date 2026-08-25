@@ -8,11 +8,11 @@ export type AppointmentRecord = {
   status: string;
   notes: string | null;
   created_at: Date;
-  duration: number;
 };
 export type ProviderBookedAppointment = {
   scheduled_at: Date;
-  duration_minutes: number;
+  duration: number;
+  ends_at: Date;
 };
 
 export async function createAppointment(input: {
@@ -57,6 +57,7 @@ export async function findAppointmentsByUser(
         a.status,
         a.notes,
         a.created_at,
+        a.ends_at,
 
         p.id AS provider_id,
         p.name AS provider_name,
@@ -147,15 +148,13 @@ export async function findProviderBookedAppointmentsForDay(
       `
         SELECT
           scheduled_at,
+          ends_at,
           duration_minutes
         FROM appointments
         WHERE provider_id = $1
           AND status IN ('pending', 'confirmed')
           AND scheduled_at < $3
-          AND (
-            scheduled_at
-            + duration_minutes * INTERVAL '1 minute'
-          ) > $2
+          AND ends_at > $2
         ORDER BY scheduled_at ASC
       `,
       [

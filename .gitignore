@@ -29,3 +29,15 @@ Thumbs.db
 
 # Coverage
 coverage/
+
+.env
+.env.*
+!.env.example
+
+node_modules/
+dist/
+.next/
+
+coverage/
+
+*.log

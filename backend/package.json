@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "db:migrate": "tsx src/db/migrate.ts"
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f src/db/seeds/docker.sql"
   },
   "keywords": [],
   "author": "",

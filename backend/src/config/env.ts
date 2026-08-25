@@ -38,6 +38,11 @@ const envSchema = z.object({
     .default(
       "mistral-small-latest"
     ),
+    APPOINTMENT_DURATION_MINUTES: z.coerce
+  .number()
+  .int()
+  .positive()
+  .default(30),
 });
 
 const parsedEnv =

@@ -341,7 +341,7 @@ export async function sendChatMessage(
       timezone,
     });
 
-
+console.log(aiResult,"AI RESULT")
   const booking =
     normalizeBooking(
       aiResult.booking,
@@ -376,9 +376,7 @@ export async function sendChatMessage(
       >
     | null = null;
 
-  let fallbackToForm =
-    booking.missingFields
-      .length > 0;
+  let fallbackToForm =false
 
 
   if (
@@ -395,6 +393,9 @@ export async function sendChatMessage(
     bookingComplete &&
     providerName
   ) {
+    console.log(
+      "Booking appointment for user:",
+      input.userId,booking)
     const scheduledAt =
       toUtcTimestamp({
         date:
@@ -420,7 +421,6 @@ export async function sendChatMessage(
           notes:
             booking.notes ??
             undefined,
-            duration:booking.duration,
         });
 
       assistantContent =
@@ -438,30 +438,22 @@ export async function sendChatMessage(
         false;
     } catch (error) {
       if (
-        error instanceof
-          AppError &&
-        error.code ===
-          "APPOINTMENT_SLOT_UNAVAILABLE"
-      ) {
-        booking.time =
-          null;
+    error &&
+    typeof error === "object" &&
+    "code" in error &&
+    error.code === "23P01" &&
+    "constraint" in error &&
+    error.constraint ===
+      "appointments_no_provider_overlap"
+  ) {
+    throw new AppError(
+      409,
+      "The provider is already booked during that time",
+      "APPOINTMENT_SLOT_UNAVAILABLE"
+    );
+  }
 
-        if (
-          !booking.missingFields
-            .includes("time")
-        ) {
-          booking.missingFields
-            .push("time");
-        }
-
-        assistantContent =
-          "That time is no longer available. Please choose another time, or use the booking form.";
-
-        fallbackToForm =
-          true;
-      } else {
-        throw error;
-      }
+  throw error;
     }
   } else if (
     bookingComplete &&

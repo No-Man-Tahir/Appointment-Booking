@@ -152,7 +152,11 @@ Rules:
 13. Do not set confirm_booking just because all fields are complete. The user must explicitly confirm.
 14. Replies such as "yes", "confirm", "book it", "go ahead", or equivalent may indicate confirmation when the immediately preceding conversation clearly contains a complete booking proposal.
 15. If the user rejects the booking, use cancel_booking.
-
+16. Never automatically select a provider just because only one provider is available.
+17. Set providerId only when the user explicitly chooses, names, or clearly accepts that provider.
+18. Questions about provider availability, such as "is there another provider?", do not count as selecting a provider.
+19. If the user has not selected a provider, providerId must remain null.
+20. If user mentions a time then ask about exact like 1 means 1:00 PM or 1:00 AM.
 Return exactly one JSON object:
 
 {
@@ -351,7 +355,14 @@ export async function generateAIResponse(
 
     let parsedJson:
       unknown;
-
+    console.log(
+  "RAW AI RESPONSE:",
+  JSON.stringify(
+    parsedJson,
+    null,
+    2
+  )
+);
     try {
       parsedJson =
         JSON.parse(content);

@@ -1,6 +1,18 @@
 import {
+  DateTime,
+} from "luxon";
+
+import {
   env,
 } from "../config/env.js";
+
+import type {
+  ChatMessageRecord,
+} from "../repository/chat.repository.js";
+
+import type {
+  ProviderRecord,
+} from "../repository/provider.repository.js";
 
 import {
   aiResponseSchema,
@@ -11,21 +23,15 @@ import {
   AppError,
 } from "../utils/AppError.js";
 
-import type {
-  ChatMessageRecord,
-} from "../repository/chat.repository.js";
-
-import type {
-  ProviderRecord,
-} from "../repository/provider.repository.js";
-
 
 const MISTRAL_API_URL =
   "https://api.mistral.ai/v1/chat/completions";
 
-const AI_TIMEOUT_MS = 15_000;
+const AI_TIMEOUT_MS =
+  15_000;
 
-const MAX_HISTORY_MESSAGES = 20;
+const MAX_HISTORY_MESSAGES =
+  20;
 
 
 type MistralUsage = {
@@ -52,11 +58,32 @@ type MistralResponse = {
 };
 
 
+function normalizeTimezone(
+  timezone?: string
+) {
+  if (!timezone) {
+    return "UTC";
+  }
+
+  const now =
+    DateTime.now().setZone(
+      timezone
+    );
+
+  if (!now.isValid) {
+    return "UTC";
+  }
+
+  return timezone;
+}
+
+
 function buildSystemPrompt(
-  providers: ProviderRecord[]
+  providers: ProviderRecord[],
+  timezone: string
 ) {
   const providerList =
-    providers.length > 0
+    providers.length
       ? providers
           .map(
             (provider) =>
@@ -71,16 +98,17 @@ function buildSystemPrompt(
       : "No providers are currently available.";
 
   const currentDate =
-    new Date()
-      .toISOString()
-      .slice(0, 10);
+    DateTime.now()
+      .setZone(timezone)
+      .toISODate();
 
   return `
 You are an appointment booking assistant.
 
-Your job is to understand the user's appointment request and collect the information required for a booking.
+Your only job is to help users book appointments with available providers.
 
 Current date: ${currentDate}
+User timezone: ${timezone}
 
 Available providers:
 ${providerList}
@@ -90,23 +118,46 @@ Required booking fields:
 - date
 - time
 
-Rules:
-1. Only use a providerId from the available provider list.
-2. Never invent a provider.
-3. If a provider cannot be matched confidently, providerId must be null.
-4. Resolve relative dates such as "tomorrow" using the current date above.
-5. Use YYYY-MM-DD for date.
-6. Use 24-hour HH:mm format for time.
-7. If required information is missing or ambiguous, ask one concise follow-up question.
-8. Do not claim that an appointment has been booked.
-9. Do not modify or create appointments.
-10. Keep the assistant response concise and helpful.
-11. Use previous conversation messages when determining information already provided.
+Possible actions:
 
-Return exactly one JSON object with this shape:
+collect_details
+- Use when required booking information is missing or ambiguous.
+
+request_confirmation
+- Use only when provider, date and time are all known but the user has NOT explicitly confirmed booking yet.
+
+confirm_booking
+- Use ONLY when provider, date and time are known AND the user's latest message explicitly confirms that they want the appointment booked.
+
+cancel_booking
+- Use when the user explicitly says not to proceed with the pending booking.
+
+unsupported
+- Use for requests unrelated to appointment booking.
+
+Rules:
+
+1. Never invent a provider.
+2. providerId must come from the available provider list.
+3. If provider matching is uncertain, providerId must be null.
+4. Resolve relative dates such as "today", "tomorrow", and "next Monday" using the current date above.
+5. Dates must use YYYY-MM-DD.
+6. Times must use 24-hour HH:mm.
+7. Use previous conversation messages to retain already-provided booking information.
+8. If required information is missing, ask ONE concise follow-up question.
+9. Never claim an appointment has already been booked.
+10. Never claim to modify database state.
+11. Do not call tools or external systems.
+12. If the request is unrelated to appointment booking, politely explain that you only assist with appointments.
+13. Do not set confirm_booking just because all fields are complete. The user must explicitly confirm.
+14. Replies such as "yes", "confirm", "book it", "go ahead", or equivalent may indicate confirmation when the immediately preceding conversation clearly contains a complete booking proposal.
+15. If the user rejects the booking, use cancel_booking.
+
+Return exactly one JSON object:
 
 {
-  "assistantMessage": "text shown to the user",
+  "assistantMessage": "message for the user",
+  "action": "collect_details | request_confirmation | confirm_booking | cancel_booking | unsupported",
   "booking": {
     "providerId": "provider UUID or null",
     "date": "YYYY-MM-DD or null",
@@ -120,7 +171,7 @@ Return exactly one JSON object with this shape:
   }
 }
 
-missingFields must contain only fields that are still required.
+missingFields must accurately reflect required fields that are still unavailable.
 `;
 }
 
@@ -138,7 +189,9 @@ function extractContent(
     return content;
   }
 
-  if (Array.isArray(content)) {
+  if (
+    Array.isArray(content)
+  ) {
     return content
       .filter(
         (part) =>
@@ -157,12 +210,22 @@ function extractContent(
 
 export async function generateAIResponse(
   input: {
-    messages: ChatMessageRecord[];
-    providers: ProviderRecord[];
+    messages:
+      ChatMessageRecord[];
+
+    providers:
+      ProviderRecord[];
+
+    timezone?: string;
   }
 ): Promise<AIResponse> {
   const startedAt =
     Date.now();
+
+  const timezone =
+    normalizeTimezone(
+      input.timezone
+    );
 
   const messages =
     input.messages.slice(
@@ -196,15 +259,19 @@ export async function generateAIResponse(
             temperature: 0.1,
 
             response_format: {
-              type: "json_object",
+              type:
+                "json_object",
             },
 
             messages: [
               {
-                role: "system",
+                role:
+                  "system",
+
                 content:
                   buildSystemPrompt(
-                    input.providers
+                    input.providers,
+                    timezone
                   ),
               },
 
@@ -220,6 +287,7 @@ export async function generateAIResponse(
                   (message) => ({
                     role:
                       message.role,
+
                     content:
                       message.content,
                   })
@@ -237,14 +305,20 @@ export async function generateAIResponse(
         JSON.stringify({
           type:
             "ai_request_failed",
-          provider: "mistral",
+
+          provider:
+            "mistral",
+
           model:
             env.MISTRAL_MODEL,
+
           status:
             response.status,
+
           durationMs:
             Date.now() -
             startedAt,
+
           response:
             responseText.slice(
               0,
@@ -275,7 +349,8 @@ export async function generateAIResponse(
       );
     }
 
-    let parsedJson: unknown;
+    let parsedJson:
+      unknown;
 
     try {
       parsedJson =
@@ -298,9 +373,13 @@ export async function generateAIResponse(
         JSON.stringify({
           type:
             "ai_validation_failed",
-          provider: "mistral",
+
+          provider:
+            "mistral",
+
           model:
             env.MISTRAL_MODEL,
+
           issues:
             parsed.error.issues,
         })
@@ -315,21 +394,30 @@ export async function generateAIResponse(
 
     console.log(
       JSON.stringify({
-        type: "ai_request",
-        provider: "mistral",
+        type:
+          "ai_request",
+
+        provider:
+          "mistral",
+
         model:
           data.model ??
           env.MISTRAL_MODEL,
+
         durationMs:
           Date.now() -
           startedAt,
+
         success: true,
+
         promptTokens:
           data.usage
             ?.prompt_tokens,
+
         completionTokens:
           data.usage
             ?.completion_tokens,
+
         totalTokens:
           data.usage
             ?.total_tokens,
@@ -339,7 +427,8 @@ export async function generateAIResponse(
     return parsed.data;
   } catch (error) {
     if (
-      error instanceof AppError
+      error instanceof
+      AppError
     ) {
       throw error;
     }
@@ -348,12 +437,17 @@ export async function generateAIResponse(
       JSON.stringify({
         type:
           "ai_request_failed",
-        provider: "mistral",
+
+        provider:
+          "mistral",
+
         model:
           env.MISTRAL_MODEL,
+
         durationMs:
           Date.now() -
           startedAt,
+
         error:
           error instanceof Error
             ? error.message

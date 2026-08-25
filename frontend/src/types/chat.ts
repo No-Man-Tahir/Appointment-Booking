@@ -8,7 +8,8 @@ export type ChatSession = {
 
   user_id: string;
 
-  status: ChatSessionStatus;
+  status:
+    ChatSessionStatus;
 
   created_at: string;
 
@@ -25,9 +26,11 @@ export type ChatMessageRole =
 export type ChatMessage = {
   id: string;
 
-  chat_session_id: string;
+  chat_session_id:
+    string;
 
-  role: ChatMessageRole;
+  role:
+    ChatMessageRole;
 
   content: string;
 
@@ -43,6 +46,10 @@ export type BookingMissingField =
 
 export type BookingDraft = {
   providerId:
+    | string
+    | null;
+
+  providerName:
     | string
     | null;
 
@@ -63,10 +70,31 @@ export type BookingDraft = {
 };
 
 
+export type BookedAppointment = {
+  id: string;
+
+  providerId: string;
+
+  scheduledAt: string;
+
+  status: string;
+};
+
+
 export type SendChatMessageResponse = {
-  userMessage: ChatMessage;
+  userMessage:
+    ChatMessage;
 
-  assistantMessage: ChatMessage;
+  assistantMessage:
+    ChatMessage;
 
-  booking: BookingDraft;
+  booking:
+    BookingDraft;
+
+  appointment:
+    | BookedAppointment
+    | null;
+
+  fallbackToForm:
+    boolean;
 };

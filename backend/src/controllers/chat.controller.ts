@@ -75,18 +75,22 @@ export async function listMessages(
 
 
 export async function createMessage(
-  req: Request<{ id: string }>,
+  req: Request,
   res: Response
 ) {
   const result =
     await sendChatMessage({
-      userId: req.user!.id,
+      userId:
+        req.user!.id,
 
       sessionId:
-        req.params.id,
+        String(req.params.id),
 
       content:
         req.body.content,
+
+      timezone:
+        req.body.timezone,
     });
 
   res.status(201).json(

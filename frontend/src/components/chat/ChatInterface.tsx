@@ -14,9 +14,15 @@ import {
 } from "@/lib/api/chat";
 
 import type {
+  BookedAppointment,
+  BookingDraft,
   ChatMessage,
   ChatSession,
 } from "@/types/chat";
+
+import {
+  BookingDraftCard,
+} from "./BookingDraftCard";
 
 import {
   ChatInput,
@@ -52,6 +58,25 @@ export function ChatInterface() {
   ] = useState<
     ChatMessage[]
   >([]);
+
+  const [
+    booking,
+    setBooking,
+  ] = useState<
+    BookingDraft | null
+  >(null);
+
+  const [
+    appointment,
+    setAppointment,
+  ] = useState<
+    BookedAppointment | null
+  >(null);
+
+  const [
+    fallbackToForm,
+    setFallbackToForm,
+  ] = useState(false);
 
   const [
     loadingSessions,
@@ -116,6 +141,12 @@ export function ChatInterface() {
         );
 
         setError("");
+
+        setBooking(null);
+        setAppointment(null);
+        setFallbackToForm(
+          false
+        );
 
         try {
           const response =
@@ -192,6 +223,11 @@ export function ChatInterface() {
       );
 
       setMessages([]);
+      setBooking(null);
+      setAppointment(null);
+      setFallbackToForm(
+        false
+      );
     } catch (error) {
       setError(
         error instanceof Error
@@ -261,11 +297,21 @@ export function ChatInterface() {
       setMessages(
         (current) => [
           ...current,
-
           response.userMessage,
-
           response.assistantMessage,
         ]
+      );
+
+      setBooking(
+        response.booking
+      );
+
+      setAppointment(
+        response.appointment
+      );
+
+      setFallbackToForm(
+        response.fallbackToForm
       );
 
       await loadSessions();
@@ -276,7 +322,9 @@ export function ChatInterface() {
           : "Failed to send message"
       );
     } finally {
-      setSendingMessage(false);
+      setSendingMessage(
+        false
+      );
     }
   }
 
@@ -331,6 +379,20 @@ export function ChatInterface() {
 
           loading={
             loadingMessages
+          }
+        />
+
+        <BookingDraftCard
+          booking={
+            booking
+          }
+
+          appointment={
+            appointment
+          }
+
+          fallbackToForm={
+            fallbackToForm
           }
         />
 

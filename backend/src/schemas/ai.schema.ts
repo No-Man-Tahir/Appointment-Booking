@@ -39,6 +39,14 @@ export const aiResponseSchema =
       .trim()
       .min(1),
 
+    action: z.enum([
+      "collect_details",
+      "request_confirmation",
+      "confirm_booking",
+      "cancel_booking",
+      "unsupported",
+    ]),
+
     booking:
       bookingDraftSchema,
   });

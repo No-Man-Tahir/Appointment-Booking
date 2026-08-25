@@ -10,6 +10,7 @@ import { apiRouter } from "./routes/index.js";
 import { env } from "./config/env.js";
 import { authRouter } from "./routes/auth.routes.js";
 import cookieParser from "cookie-parser";
+import { appointmentRouter } from "./routes/appointment.routes.js";
 
 export const app = express();
 
@@ -41,6 +42,11 @@ app.use(
 apiRouter.use(
   "/auth",
   authRouter
+);
+
+apiRouter.use(
+  "/appointments",
+  appointmentRouter
 );
 
 

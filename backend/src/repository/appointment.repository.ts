@@ -8,6 +8,11 @@ export type AppointmentRecord = {
   status: string;
   notes: string | null;
   created_at: Date;
+  duration: number;
+};
+export type ProviderBookedAppointment = {
+  scheduled_at: Date;
+  duration_minutes: number;
 };
 
 export async function createAppointment(input: {
@@ -15,6 +20,7 @@ export async function createAppointment(input: {
   providerId: string;
   scheduledAt: string;
   notes?: string;
+  endsAt: string;
 }) {
   const result = await pool.query<AppointmentRecord>(
     `
@@ -22,9 +28,10 @@ export async function createAppointment(input: {
         user_id,
         provider_id,
         scheduled_at,
-        notes
+        notes,
+        ends_at
       )
-      VALUES ($1, $2, $3, $4)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *
     `,
     [
@@ -32,6 +39,7 @@ export async function createAppointment(input: {
       input.providerId,
       input.scheduledAt,
       input.notes ?? null,
+      input.endsAt,
     ]
   );
 
@@ -127,4 +135,35 @@ export async function cancelAppointment(
   );
 
   return result.rows[0] ?? null;
+}
+
+export async function findProviderBookedAppointmentsForDay(
+  providerId: string,
+  startOfDay: Date,
+  endOfDay: Date
+): Promise<ProviderBookedAppointment[]> {
+  const result =
+    await pool.query<ProviderBookedAppointment>(
+      `
+        SELECT
+          scheduled_at,
+          duration_minutes
+        FROM appointments
+        WHERE provider_id = $1
+          AND status IN ('pending', 'confirmed')
+          AND scheduled_at < $3
+          AND (
+            scheduled_at
+            + duration_minutes * INTERVAL '1 minute'
+          ) > $2
+        ORDER BY scheduled_at ASC
+      `,
+      [
+        providerId,
+        startOfDay,
+        endOfDay,
+      ]
+    );
+
+  return result.rows;
 }

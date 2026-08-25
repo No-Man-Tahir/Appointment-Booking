@@ -17,6 +17,7 @@ export async function bookAppointment(input: {
   providerId: string;
   scheduledAt: string;
   notes?: string;
+  duration: number;
 }) {
   const scheduledAt = new Date(
     input.scheduledAt
@@ -41,23 +42,45 @@ export async function bookAppointment(input: {
       "PROVIDER_NOT_FOUND"
     );
   }
+   const start =
+    new Date(input.scheduledAt);
 
+  const end =
+    new Date(
+      start.getTime() +
+        input.duration * 60_000
+    );
+
+  
   try {
-    return await createAppointment(input);
+    return  createAppointment({
+    userId: input.userId,
+    providerId: input.providerId,
+    scheduledAt:
+      start.toISOString(),
+    notes: input.notes,
+    endsAt:
+      end.toISOString(),
+  });
   } catch (error) {
     const dbError = error as PostgresError;
 
     if (
-      dbError.code === "23505" &&
-      dbError.constraint ===
-        "uq_appointments_provider_active_slot"
-    ) {
-      throw new AppError(
-        409,
-        "The provider is already booked for this time",
-        "APPOINTMENT_SLOT_UNAVAILABLE"
-      );
-    }
+  error &&
+  typeof error === "object" &&
+  "code" in error &&
+  error.code === "23P01" &&
+  "constraint" in error &&
+  error.constraint ===
+    "appointments_no_provider_overlap"
+) {
+  throw new AppError(
+    409,
+    "The provider is already booked during that time",
+    "APPOINTMENT_SLOT_UNAVAILABLE"
+  );
+}
+    
 
     throw error;
   }

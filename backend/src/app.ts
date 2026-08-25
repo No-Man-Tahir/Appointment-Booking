@@ -12,6 +12,10 @@ import { authRouter } from "./routes/auth.routes.js";
 import cookieParser from "cookie-parser";
 import { appointmentRouter } from "./routes/appointment.routes.js";
 import { chatRouter } from "./routes/chat.routes.js";
+import { asyncHandler } from "./utils/asyncHandler.js";
+import { listProviders } from "./controllers/provider.controller.js";
+import { requireAuth } from "./middleware/auth.middleware.js";
+import { providerRouter } from "./routes/provider.routes.js";
 
 export const app = express();
 
@@ -53,6 +57,10 @@ apiRouter.use(
 apiRouter.use(
     "/chat",
     chatRouter
+);
+apiRouter.use(
+    "/providers",
+   providerRouter
 );
 
 

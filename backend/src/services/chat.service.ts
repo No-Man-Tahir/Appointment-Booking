@@ -420,6 +420,7 @@ export async function sendChatMessage(
           notes:
             booking.notes ??
             undefined,
+            duration:booking.duration,
         });
 
       assistantContent =

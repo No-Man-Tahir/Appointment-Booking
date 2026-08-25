@@ -10,6 +10,7 @@ export const createAppointmentSchema = z.object({
     .trim()
     .max(2000)
     .optional(),
+ duration: z.number().int().positive()
 });
 
 export const appointmentParamsSchema = z.object({

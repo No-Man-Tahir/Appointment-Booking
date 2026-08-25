@@ -6,8 +6,37 @@ import {
   apiFetch,
 } from "./client";
 
+
 export function getProviders() {
   return apiFetch<{
     providers: Provider[];
-  }>("/api/providers");
+  }>(
+    "/api/providers"
+  );
+}
+
+
+export function getProviderBookedSlots(
+  providerId: string,
+  date: string
+) {
+  const timezone =
+    Intl.DateTimeFormat()
+      .resolvedOptions()
+      .timeZone;
+
+  const params =
+    new URLSearchParams({
+      date,
+      timezone,
+    });
+
+  return apiFetch<{
+    providerId: string;
+    date: string;
+    durationMinutes: number;
+    bookedSlots: string[];
+  }>(
+    `/api/providers/${providerId}/booked-slots?${params.toString()}`
+  );
 }

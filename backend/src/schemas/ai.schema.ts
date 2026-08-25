@@ -22,12 +22,17 @@ export const bookingDraftSchema =
     notes: z
       .string()
       .nullable(),
+    duration: z
+      .number()
+      .int()
+      .positive(),
 
     missingFields: z.array(
       z.enum([
         "provider",
         "date",
         "time",
+        "duration",
       ])
     ),
   });

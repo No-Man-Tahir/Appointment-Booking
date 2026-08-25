@@ -25,8 +25,9 @@ export function AppointmentCard({
   const canCancel =
     appointment.status === "pending" ||
     appointment.status === "confirmed";
-
-  return (
+const endDate = new Date(appointmentDate.getTime() + appointment.duration * 60 * 1000);
+  
+return (
     <article className="rounded-lg border bg-white p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -59,7 +60,7 @@ export function AppointmentCard({
             }
           )}
         </p>
-
+        <div className="flex gap-2">
         <p>
           {appointmentDate.toLocaleTimeString(
             undefined,
@@ -69,7 +70,16 @@ export function AppointmentCard({
             }
           )}
         </p>
-
+        <p>
+          {endDate.toLocaleTimeString(
+            undefined,
+            {
+              hour: "2-digit",
+              minute: "2-digit",
+            }
+          )}
+        </p>
+          </div>
         {appointment.notes && (
           <p className="pt-2 text-gray-600">
             {appointment.notes}

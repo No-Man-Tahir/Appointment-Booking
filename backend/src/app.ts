@@ -16,6 +16,7 @@ import { asyncHandler } from "./utils/asyncHandler.js";
 import { listProviders } from "./controllers/provider.controller.js";
 import { requireAuth } from "./middleware/auth.middleware.js";
 import { providerRouter } from "./routes/provider.routes.js";
+import { requestContext } from "./middleware/request-context.middleware.js";
 
 export const app = express();
 
@@ -38,6 +39,10 @@ app.use(requestLogger);
 
 app.use(cookieParser());
 
+app.use(
+  requestContext
+);
+    
 app.use(
   "/api",
   apiRateLimiter,

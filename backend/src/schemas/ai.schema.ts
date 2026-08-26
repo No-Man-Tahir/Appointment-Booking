@@ -40,12 +40,13 @@ export const aiResponseSchema =
       .min(1),
 
     action: z.enum([
-      "collect_details",
-      "request_confirmation",
-      "confirm_booking",
-      "cancel_booking",
-      "unsupported",
-    ]),
+  "collect_details",
+  "update_booking",
+  "request_confirmation",
+  "confirm_booking",
+  "cancel_booking",
+  "unsupported",
+]),
 
     booking:
       bookingDraftSchema,

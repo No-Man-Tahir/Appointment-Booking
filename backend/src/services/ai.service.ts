@@ -157,6 +157,23 @@ Rules:
 18. Questions about provider availability, such as "is there another provider?", do not count as selecting a provider.
 19. If the user has not selected a provider, providerId must remain null.
 20. If user mentions a time then ask about exact like 1 means 1:00 PM or 1:00 AM.
+
+update_booking
+- Use when the user changes any previously supplied booking detail such as provider, date, time, or notes.
+- Examples:
+  "change the time to 17:00"
+  "half an hour later"
+  "tomorrow instead"
+  "use Dr. Smith"
+  "move it 30 minutes forward"
+
+If the user changes a previously collected field, update that field and preserve all other previously confirmed fields.
+
+If the user says "half an hour later", "30 minutes later", "move it forward by 30 minutes", or equivalent:
+- keep provider and date unchanged
+- add 30 minutes to the currently proposed time
+- if the change crosses midnight, update the date as well
+
 Return exactly one JSON object:
 
 {

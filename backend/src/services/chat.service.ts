@@ -30,6 +30,9 @@ import {
   bookAppointment,
 } from "./appointment.service.js";
 
+import {
+  recordRequestEvent,
+} from "./analytics.service.js";
 
 function normalizeTimezone(
   timezone?: string
@@ -274,6 +277,7 @@ export async function sendChatMessage(
     content: string;
 
     timezone?: string;
+    requestId?: string;
   }
 ) {
   const session =
@@ -320,6 +324,24 @@ export async function sendChatMessage(
         input.content,
     });
 
+    await recordRequestEvent({
+  requestId:
+    String(input.requestId),
+
+  userId:
+    input.userId,
+
+  eventType:
+    "user_message_saved",
+
+  payload: {
+    chatSessionId:
+      session.id,
+
+    messageId:
+      userMessage.id,
+  },
+});
 
   const history =
     await findMessagesBySession(
@@ -331,6 +353,24 @@ export async function sendChatMessage(
     await findProviders();
 
 
+    await recordRequestEvent({
+  requestId:
+    String(input.requestId),
+
+  userId:
+    input.userId,
+
+  eventType:
+    "ai_request_started",
+
+  payload: {
+    chatSessionId:
+      session.id,
+
+    providerCount:
+      providers.length,
+  },
+});
   const aiResult =
     await generateAIResponse({
       messages:
@@ -341,7 +381,25 @@ export async function sendChatMessage(
       timezone,
     });
 
-console.log(aiResult,"AI RESULT")
+await recordRequestEvent({
+  requestId:
+    String(input.requestId),
+
+  userId:
+    input.userId,
+
+  eventType:
+    "ai_response_received",
+
+  payload: {
+    action:
+      aiResult.action,
+
+    missingFields:
+      aiResult.booking
+        .missingFields,
+  },
+});
   const booking =
     normalizeBooking(
       aiResult.booking,
@@ -393,9 +451,6 @@ console.log(aiResult,"AI RESULT")
     bookingComplete &&
     providerName
   ) {
-    console.log(
-      "Booking appointment for user:",
-      input.userId,booking)
     const scheduledAt =
       toUtcTimestamp({
         date:
@@ -422,6 +477,27 @@ console.log(aiResult,"AI RESULT")
             booking.notes ??
             undefined,
         });
+        await recordRequestEvent({
+  requestId:
+    String(input.requestId),
+
+  userId:
+    input.userId,
+
+  eventType:
+    "appointment_created",
+
+  payload: {
+    appointmentId:
+      appointment.id,
+
+    providerId:
+      appointment.provider_id,
+
+    scheduledAt:
+      appointment.scheduled_at,
+  },
+});
 
       assistantContent =
         buildSuccessMessage({
@@ -446,6 +522,27 @@ console.log(aiResult,"AI RESULT")
     error.constraint ===
       "appointments_no_provider_overlap"
   ) {
+    await recordRequestEvent({
+  requestId:
+    String(input.requestId),
+
+  userId:
+    input.userId,
+
+  eventType:
+    "appointment_slot_conflict",
+
+  payload: {
+    providerId:
+      booking.providerId,
+
+    date:
+      booking.date,
+
+    time:
+      booking.time,
+  },
+});
     throw new AppError(
       409,
       "The provider is already booked during that time",
@@ -472,6 +569,27 @@ console.log(aiResult,"AI RESULT")
 
     fallbackToForm =
       false;
+      await recordRequestEvent({
+  requestId:
+    String(input.requestId),
+
+  userId:
+    input.userId,
+
+  eventType:
+    "booking_confirmation_requested",
+
+  payload: {
+    providerId:
+      booking.providerId,
+
+    date:
+      booking.date,
+
+    time:
+      booking.time,
+  },
+});
   }
 
 
@@ -486,7 +604,24 @@ console.log(aiResult,"AI RESULT")
       content:
         assistantContent,
     });
+await recordRequestEvent({
+  requestId:
+    String(input.requestId),
 
+  userId:
+    input.userId,
+
+  eventType:
+    "assistant_message_saved",
+
+  payload: {
+    chatSessionId:
+      session.id,
+
+    messageId:
+      assistantMessage.id,
+  },
+});
 
   return {
     userMessage,

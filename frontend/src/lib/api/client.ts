@@ -1,6 +1,3 @@
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4000";
 
 export class ApiError extends Error {
   constructor(
@@ -40,9 +37,10 @@ export async function apiFetch<T>(
     await response.json();
 
   if (!response.ok) {
-    throw new Error(
-      data.message ??
-        "Request failed"
+    throw new ApiError(
+      response.status,
+      data.error?.code ?? "UNKNOWN_ERROR",
+      data.error?.message ?? "Request failed"
     );
   }
 

@@ -56,7 +56,7 @@ export async function bookAppointment(input: {
 
   
   try {
-    return  createAppointment({
+    return await createAppointment({
     userId: input.userId,
     providerId: input.providerId,
     scheduledAt:

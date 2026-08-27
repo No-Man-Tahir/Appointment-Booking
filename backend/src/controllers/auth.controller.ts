@@ -12,14 +12,21 @@ import {
 
 const COOKIE_NAME = "access_token";
 
-function authCookieOptions() {
-  return {
-    httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "lax" as const,
-    maxAge: 60 * 60 * 1000,
-  };
-}
+const authCookieOptions = {
+  httpOnly: true,
+
+  secure:
+    env.NODE_ENV ===
+    "production",
+
+  sameSite:
+    "lax" as const,
+
+  path: "/",
+
+  maxAge:
+    60 * 60 * 1000,
+};
 
 export async function register(
   req: Request,
@@ -31,7 +38,7 @@ export async function register(
     .cookie(
       COOKIE_NAME,
       result.token,
-      authCookieOptions()
+      authCookieOptions   
     )
     .status(201)
     .json({
@@ -49,7 +56,7 @@ export async function login(
     .cookie(
       COOKIE_NAME,
       result.token,
-      authCookieOptions()
+      authCookieOptions
     )
     .status(200)
     .json({
@@ -62,9 +69,20 @@ export async function logout(
   res: Response
 ) {
   res.clearCookie(
-    COOKIE_NAME,
-    authCookieOptions()
-  );
+  "access_token",
+  {
+    httpOnly: true,
+
+    secure:
+      env.NODE_ENV ===
+      "production",
+
+    sameSite:
+      "lax",
+
+    path: "/",
+  }
+);
 
   res.status(204).send();
 }

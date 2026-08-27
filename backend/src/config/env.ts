@@ -1,20 +1,13 @@
 import "dotenv/config";
-
 import { z } from "zod";
 
 const envSchema = z.object({
   NODE_ENV: z
-    .enum([
-      "development",
-      "test",
-      "production",
-    ])
+    .enum(["development", "test", "production"])
     .default("development"),
 
   PORT: z.coerce
     .number()
-    .int()
-    .positive()
     .default(4000),
 
   DATABASE_URL: z
@@ -23,7 +16,7 @@ const envSchema = z.object({
 
   CLIENT_ORIGIN: z
     .string()
-    .url(),
+    .min(1),
 
   JWT_SECRET: z
     .string()
@@ -35,30 +28,14 @@ const envSchema = z.object({
 
   MISTRAL_MODEL: z
     .string()
-    .default(
-      "mistral-small-latest"
-    ),
-    APPOINTMENT_DURATION_MINUTES: z.coerce
-  .number()
-  .int()
-  .positive()
-  .default(30),
+    .default("mistral-small-latest"),
+
+  APPOINTMENT_DURATION_MINUTES: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(30),
 });
 
-const parsedEnv =
-  envSchema.safeParse(
-    process.env
-  );
-
-if (!parsedEnv.success) {
-  console.error(
-    "Invalid environment configuration:",
-    parsedEnv.error.flatten()
-      .fieldErrors
-  );
-
-  process.exit(1);
-}
-
 export const env =
-  parsedEnv.data;
+  envSchema.parse(process.env);

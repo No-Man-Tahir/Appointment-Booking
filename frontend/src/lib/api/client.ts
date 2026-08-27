@@ -18,41 +18,33 @@ export async function apiFetch<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const response = await fetch(
-    `${API_URL}${path}`,
-    {
-      ...options,
+  const response =
+    await fetch(
+      `${path}`,
+      {
+        ...options,
 
-      headers: {
-        "Content-Type":
-          "application/json",
-        ...options.headers,
-      },
+        credentials:
+          "include",
 
-      credentials: "include",
-    }
-  );
+        headers: {
+          "Content-Type":
+            "application/json",
+
+          ...options.headers,
+        },
+      }
+    );
+
+  const data =
+    await response.json();
 
   if (!response.ok) {
-    const data =
-      await response
-        .json()
-        .catch(() => null);
-
-    throw new ApiError(
-      response.status,
-      data?.error?.code ??
-        "REQUEST_FAILED",
-      data?.error?.message ??
-        "Something went wrong"
+    throw new Error(
+      data.message ??
+        "Request failed"
     );
   }
 
-  if (
-    response.status === 204
-  ) {
-    return undefined as T;
-  }
-
-  return response.json();
+  return data;
 }

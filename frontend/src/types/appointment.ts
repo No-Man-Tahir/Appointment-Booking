@@ -13,6 +13,5 @@ export type Appointment = {
   provider_id: string;
   provider_name: string;
   provider_specialty: string | null;
-  duration: number;
   ends_at: string;
 };

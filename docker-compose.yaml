@@ -35,7 +35,7 @@ services:
     container_name: appointment-backend
 
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       PORT: 4000
 
       DATABASE_URL: postgresql://${POSTGRES_USER:-appointment_user}:${POSTGRES_PASSWORD:-appointment_password}@postgres:5432/${POSTGRES_DB:-appointment_app}
@@ -62,7 +62,7 @@ services:
           "--quiet",
           "--tries=1",
           "--spider",
-          "http://localhost:4000/api/health"
+          "http://127.0.0.1:4000/api/health"
         ]
       interval: 10s
       timeout: 5s
@@ -102,7 +102,7 @@ services:
       dockerfile: Dockerfile
 
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:4000
+        BACKEND_API_URL: http://localhost:4000
         NEXT_PUBLIC_APPOINTMENT_DURATION: 30
 
     container_name: appointment-frontend

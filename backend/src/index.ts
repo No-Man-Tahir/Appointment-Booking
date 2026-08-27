@@ -3,9 +3,10 @@ import { env } from "./config/env.js";
 
 const server = app.listen(
   env.PORT,
+  "0.0.0.0",
   () => {
     console.log(
-      `API running on port ${env.PORT}`
+      `Server running on port ${env.PORT}`
     );
   }
 );

@@ -33,8 +33,11 @@ export async function apiFetch<T>(
       }
     );
 
-  const data =
-    await response.json();
+  const text = await response.text();
+
+  const data = text
+    ? JSON.parse(text)
+    : null;
 
   if (!response.ok) {
     throw new ApiError(
